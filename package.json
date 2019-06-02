@@ -1,0 +1,23 @@
+{
+  "name": "personal-2.0-backend",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "env-cmd -r ./config/.env -e dev nodemon src/app.js"
+  },
+  "dependencies": {
+    "bcrypt": "^3.0.6",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "express": "~4.16.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.2.6",
+    "mongoose": "^5.5.12",
+    "morgan": "~1.9.0",
+    "validator": "^11.0.0"
+  },
+  "devDependencies": {
+    "env-cmd": "^9.0.2"
+  }
+}
