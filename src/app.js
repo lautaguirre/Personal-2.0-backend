@@ -6,8 +6,8 @@ const logger = require('morgan');
 require('./db/mongoose');
 
 // Routes imports
-const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const adminRouter = require('./routes/admin');
 
 const app = express();
 
@@ -20,8 +20,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // Routes
-app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/admin', adminRouter);
 
 // Create server
 app.listen(port, () => {

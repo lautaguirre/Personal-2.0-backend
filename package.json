@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node src/app.js",
-    "dev": "env-cmd -r ./config/.env -e dev nodemon src/app.js"
+    "dev": "env-cmd -r ./config/.env -e dev nodemon src/app.js",
+    "test": "env-cmd -r ./config/.env -e test jest --watch --runInBand"
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
