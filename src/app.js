@@ -9,6 +9,7 @@ require('./db/mongoose');
 // Routes imports
 const usersRouter = require('./routes/users');
 const adminRouter = require('./routes/admin');
+const informationRouter = require('./routes/information');
 
 const app = express();
 
@@ -21,13 +22,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// Fake latency
 if (process.env.PORT === '3002') {
-  app.use(function(req,res,next){setTimeout(next,2000)});
+  app.use((req,res,next) => {
+    setTimeout(next, 2000);
+  });
 }
 
 // Routes
 app.use('/users', usersRouter);
 app.use('/admin', adminRouter);
+app.use('/information', informationRouter);
 
 // Create server
 app.listen(port, () => {
