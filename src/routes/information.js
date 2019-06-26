@@ -63,7 +63,6 @@ router.post('/about', async (req, res) => {
 
     return res.send({ ...payload, _id });
   } catch(e) {
-    console.log(e.message);
     return res.status(500).send({ error: 'Error creating information' });
   }
 });
@@ -78,13 +77,57 @@ router.get('/languages', async (req, res) => {
   }
 });
 
+router.delete('/languages/:_id', async (req, res) => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    res.status(500).send({ error: 'Missing ID' });
+  }
+
+  try {
+    const result = await Language.findByIdAndDelete(_id);
+
+    return res.send(result);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error deleting language' });
+  }
+});
+
+router.patch('/languages/:_id', async (req, res) => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    res.status(500).send({ error: 'Missing ID' });
+  }
+
+  try {
+    const result = await Language.findByIdAndUpdate(_id, req.body, { runValidators: true });
+
+    return res.send(result);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error editing language' });
+  }
+});
+
+router.post('/languages', async (req, res) => {
+  const language = new Language(req.body);
+
+  try  {
+    await language.save();
+
+    return res.send(language);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error creating language' });
+  }
+});
+
 router.get('/portfolio', async (req, res) => {
   try {
     const portfolio = await Portfolio.find({});
 
     return res.send({ portfolio });
   } catch(e) {
-    return res.status(500).send({ error: 'Error retrieving information' });
+    return res.status(500).send({ error: 'Error retrieving portfolio' });
   }
 });
 

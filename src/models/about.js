@@ -11,12 +11,12 @@ const aboutSchema = new mongoose.Schema({
     itemHeader: {
       type: String,
       required: true,
-      maxlength: 256,
+      maxlength: 512,
     },
     itemText: {
       type: String,
       required: true,
-      maxlength: 256,
+      maxlength: 512,
     },
   }],
 }, {
