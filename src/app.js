@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 // Fake latency
 if (process.env.PORT === '3002') {
   app.use((req,res,next) => {
-    setTimeout(next, 2000);
+    setTimeout(next, 500);
   });
 }
 
