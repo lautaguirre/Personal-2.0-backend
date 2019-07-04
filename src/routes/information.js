@@ -141,4 +141,48 @@ router.get('/skills', async (req, res) => {
   }
 });
 
+router.delete('/skills/:_id', async (req, res) => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    res.status(500).send({ error: 'Missing ID' });
+  }
+
+  try {
+    const result = await Skill.updateOne({ 'content._id': _id }, { $pull: { content: { _id }} });
+
+    return res.send(result);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error deleting Skill' });
+  }
+});
+
+router.patch('/skills/:_id', async (req, res) => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    res.status(500).send({ error: 'Missing ID' });
+  }
+
+  try {
+    const result = await Language.findByIdAndUpdate(_id, req.body, { runValidators: true });
+
+    return res.send(result);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error editing language' });
+  }
+});
+
+router.post('/skills', async (req, res) => {
+  const language = new Language(req.body);
+
+  try  {
+    await language.save();
+
+    return res.send(language);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error creating language' });
+  }
+});
+
 module.exports = router;
