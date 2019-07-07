@@ -203,15 +203,36 @@ router.patch('/skills/:_id', uploadSkill.single('asset'), async (req, res) => {
   }
 });
 
-router.post('/skills', async (req, res) => {
-  const language = new Language(req.body);
+router.post('/skills', uploadSkill.single('asset'), async (req, res) => {
+  const { groupId, type, asset, description } = req.body;
+
+  if (!groupId) {
+    return res.status(400).send({ error: 'Missing group ID' });
+  }
+
+  const _id = new mongoose.Types.ObjectId();
+
+  let formattedAsset;
+  if (type === 'image') {
+    if (req.file) {
+      formattedAsset = req.file.buffer.toString('base64');
+    } else if (asset) {
+      formattedAsset = asset.data;
+    } else {
+      return res.status(500).send({ error: 'Missing File' });
+    }
+  } else if (type === 'icon'){
+    formattedAsset = asset;
+  } else {
+    return res.status(500).send({ error: 'Incorrect image type' });
+  }
 
   try  {
-    await language.save();
+    await Skill.updateOne({ _id: groupId }, { $push: { content: { ...req.body, asset: formattedAsset, _id } }}, { runValidators: true });
 
-    return res.send(language);
+    return res.send({ _id, description, type, asset: formattedAsset });
   } catch(e) {
-    return res.status(500).send({ error: 'Error creating language' });
+    return res.status(500).send({ error: 'Error creating skill' });
   }
 });
 
