@@ -4,6 +4,7 @@ const Language = require('../models/language');
 const Portfolio = require('../models/portfolio');
 const Skill = require('../models/skill');
 const mongoose = require('mongoose');
+const multer = require('multer');
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.delete('/about/:_id', async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
-    res.status(500).send({ error: 'Missing ID' });
+    return res.status(500).send({ error: 'Missing ID' });
   }
 
   try {
@@ -37,11 +38,11 @@ router.patch('/about/:_id', async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
-    res.status(500).send({ error: 'Missing ID' });
+    return res.status(500).send({ error: 'Missing ID' });
   }
 
   try {
-    const result = await About.updateOne({ 'items._id': _id }, { 'items.$': { ...req.body, _id }}, { runValidators:true });
+    const result = await About.updateOne({ 'items._id': _id }, { 'items.$': { ...req.body, _id }}, { runValidators: true });
 
     return res.send(result);
   } catch(e) {
@@ -81,7 +82,7 @@ router.delete('/languages/:_id', async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
-    res.status(500).send({ error: 'Missing ID' });
+    return res.status(500).send({ error: 'Missing ID' });
   }
 
   try {
@@ -97,7 +98,7 @@ router.patch('/languages/:_id', async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
-    res.status(500).send({ error: 'Missing ID' });
+    return res.status(500).send({ error: 'Missing ID' });
   }
 
   try {
@@ -145,7 +146,7 @@ router.delete('/skills/:_id', async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
-    res.status(500).send({ error: 'Missing ID' });
+    return res.status(500).send({ error: 'Missing ID' });
   }
 
   try {
@@ -157,19 +158,48 @@ router.delete('/skills/:_id', async (req, res) => {
   }
 });
 
-router.patch('/skills/:_id', async (req, res) => {
+const uploadSkill = multer({
+  limits: {
+    fileSize: 10000,
+  },
+  fileFilter(req, file, cb) {
+    if (file.mimetype !== 'image/svg+xml') {
+      return cb(new Error('File must be a SVG file'));
+    }
+
+    cb(undefined, true);
+  },
+});
+router.patch('/skills/:_id', uploadSkill.single('asset'), async (req, res) => {
   const { _id } = req.params;
+  const { type, asset } = req.body;
 
   if (!_id) {
-    res.status(500).send({ error: 'Missing ID' });
+    return res.status(500).send({ error: 'Missing ID' });
+  }
+
+  let formattedAsset;
+  if (type === 'image') {
+    if (req.file) {
+      formattedAsset = req.file.buffer.toString('base64');
+    } else if (asset) {
+      formattedAsset = asset.data;
+    } else {
+      return res.status(500).send({ error: 'Missing File' });
+    }
+  } else if (type === 'icon'){
+    formattedAsset = asset;
+  } else {
+    return res.status(500).send({ error: 'Incorrect image type' });
   }
 
   try {
-    const result = await Language.findByIdAndUpdate(_id, req.body, { runValidators: true });
+    await Skill.updateOne({ 'content._id': _id }, { 'content.$': { ...req.body, asset: formattedAsset, _id }}, { runValidators: true });
 
-    return res.send(result);
+    return res.send({ ...req.body, asset: formattedAsset, _id });
   } catch(e) {
-    return res.status(500).send({ error: 'Error editing language' });
+    console.log(e.message)
+    return res.status(500).send({ error: 'Error editing skill' });
   }
 });
 

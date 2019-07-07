@@ -7,12 +7,17 @@ const skillSchema = new mongoose.Schema({
   content: [{
     type: {
       type: String,
+      required: true,
+      enum: ['image', 'icon'],
     },
     description: {
       type: String,
+      required: true,
+      maxLength: 128,
     },
     asset: {
       type: String,
+      required: true,
     },
   }],
 }, {
