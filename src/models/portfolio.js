@@ -18,7 +18,14 @@ const portfolioSchema = new mongoose.Schema({
       type: String,
     },
   }],
-  images: [String],
+  images: [{
+    name: {
+      type: String,
+    },
+    asset: {
+      type: String,
+    },
+  }],
 }, {
   timestamps: true,
 });
