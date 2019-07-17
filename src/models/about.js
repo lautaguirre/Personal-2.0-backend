@@ -12,11 +12,13 @@ const aboutSchema = new mongoose.Schema({
       type: String,
       required: true,
       maxlength: 512,
+      trim: true,
     },
     itemText: {
       type: String,
       required: true,
       maxlength: 512,
+      trim: true,
     },
   }],
 }, {

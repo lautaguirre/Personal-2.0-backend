@@ -14,6 +14,7 @@ const skillSchema = new mongoose.Schema({
       type: String,
       required: true,
       maxLength: 128,
+      trim: true,
     },
     asset: {
       type: String,

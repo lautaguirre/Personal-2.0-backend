@@ -1,31 +1,35 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
 
 const portfolioSchema = new mongoose.Schema({
   title: {
     type: String,
+    required: true,
+    maxlength: 120,
+    trim: true,
   },
   titleLink: {
     type: String,
+    required: true,
+    maxlength: 120,
+    trim: true,
+    lowercase: true,
+    validate(value) {
+      if (!validator.isURL(value)) throw new Error('URL is invalid');
+    }
   },
   description: {
     type: String,
+    required: true,
+    maxlength: 1024,
+    trim: true,
   },
-  techStack: [{
-    name: {
-      type: String,
-    },
-    description: {
-      type: String,
-    },
-  }],
-  images: [{
-    name: {
-      type: String,
-    },
-    asset: {
-      type: String,
-    },
-  }],
+  techStack: {
+    type: [String],
+    maxlength: 120,
+    trim: true,
+  },
+  images: [String],
 }, {
   timestamps: true,
 });

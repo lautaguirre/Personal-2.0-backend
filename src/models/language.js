@@ -5,6 +5,7 @@ const languageSchema = new mongoose.Schema({
     type: String,
     required: true,
     maxlength: 120,
+    trim: true,
   },
   percentage: {
     type: Number,
@@ -16,6 +17,7 @@ const languageSchema = new mongoose.Schema({
     type: String,
     required: true,
     maxlength: 120,
+    trim: true,
   },
 }, {
   timestamps: true,

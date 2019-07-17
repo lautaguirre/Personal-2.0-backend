@@ -5,10 +5,12 @@ const Portfolio = require('../models/portfolio');
 const Skill = require('../models/skill');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { auth, isAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/about', async (req, res) => {
+// ABOUT
+router.get('/about', [auth, isAdmin], async (req, res) => {
   try {
     const about = await About.find({});
 
@@ -18,7 +20,7 @@ router.get('/about', async (req, res) => {
   }
 });
 
-router.delete('/about/:_id', async (req, res) => {
+router.delete('/about/:_id', [auth, isAdmin], async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -34,7 +36,7 @@ router.delete('/about/:_id', async (req, res) => {
   }
 });
 
-router.patch('/about/:_id', async (req, res) => {
+router.patch('/about/:_id', [auth, isAdmin], async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -50,7 +52,7 @@ router.patch('/about/:_id', async (req, res) => {
   }
 });
 
-router.post('/about', async (req, res) => {
+router.post('/about', [auth, isAdmin], async (req, res) => {
   const { payload, groupId } = req.body;
 
   if (!groupId) {
@@ -68,7 +70,8 @@ router.post('/about', async (req, res) => {
   }
 });
 
-router.get('/languages', async (req, res) => {
+// LANGUAGES
+router.get('/languages', [auth, isAdmin], async (req, res) => {
   try {
     const languages = await Language.find({});
 
@@ -78,7 +81,7 @@ router.get('/languages', async (req, res) => {
   }
 });
 
-router.delete('/languages/:_id', async (req, res) => {
+router.delete('/languages/:_id', [auth, isAdmin], async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -94,7 +97,7 @@ router.delete('/languages/:_id', async (req, res) => {
   }
 });
 
-router.patch('/languages/:_id', async (req, res) => {
+router.patch('/languages/:_id', [auth, isAdmin], async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -110,7 +113,7 @@ router.patch('/languages/:_id', async (req, res) => {
   }
 });
 
-router.post('/languages', async (req, res) => {
+router.post('/languages', [auth, isAdmin], async (req, res) => {
   const language = new Language(req.body);
 
   try  {
@@ -122,7 +125,8 @@ router.post('/languages', async (req, res) => {
   }
 });
 
-router.get('/portfolio', async (req, res) => {
+// PORTFOLIO
+router.get('/portfolio', [auth, isAdmin], async (req, res) => {
   try {
     const portfolio = await Portfolio.find({});
 
@@ -132,7 +136,52 @@ router.get('/portfolio', async (req, res) => {
   }
 });
 
-router.get('/skills', async (req, res) => {
+router.delete('/portfolio/:_id', [auth, isAdmin], async (req, res) => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    return res.status(500).send({ error: 'Missing ID' });
+  }
+
+  try {
+    const result = await Portfolio.findByIdAndDelete(_id);
+
+    return res.send(result);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error deleting portfolio' });
+  }
+});
+
+router.patch('/portfolio/:_id', [auth, isAdmin], async (req, res) => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    return res.status(500).send({ error: 'Missing ID' });
+  }
+
+  try {
+    const result = await Portfolio.findByIdAndUpdate(_id, req.body, { runValidators: true });
+
+    return res.send(result);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error editing portfolio' });
+  }
+});
+
+router.post('/portfolio', [auth, isAdmin], async (req, res) => {
+  const portfolio = new Portfolio(req.body);
+
+  try  {
+    await portfolio.save();
+
+    return res.send(portfolio);
+  } catch(e) {
+    return res.status(500).send({ error: 'Error creating portfolio' });
+  }
+});
+
+// SKILLS
+router.get('/skills', [auth, isAdmin], async (req, res) => {
   try {
     const skills = await Skill.find({});
 
@@ -142,7 +191,7 @@ router.get('/skills', async (req, res) => {
   }
 });
 
-router.delete('/skills/:_id', async (req, res) => {
+router.delete('/skills/:_id', [auth, isAdmin], async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -170,7 +219,7 @@ const uploadSkill = multer({
     cb(undefined, true);
   },
 });
-router.patch('/skills/:_id', uploadSkill.single('asset'), async (req, res) => {
+router.patch('/skills/:_id', [auth, isAdmin], uploadSkill.single('asset'), async (req, res) => {
   const { _id } = req.params;
   const { type, asset } = req.body;
 
@@ -203,7 +252,7 @@ router.patch('/skills/:_id', uploadSkill.single('asset'), async (req, res) => {
   }
 });
 
-router.post('/skills', uploadSkill.single('asset'), async (req, res) => {
+router.post('/skills', [auth, isAdmin], uploadSkill.single('asset'), async (req, res) => {
   const { groupId, type, asset, description } = req.body;
 
   if (!groupId) {
