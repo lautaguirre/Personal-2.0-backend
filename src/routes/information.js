@@ -10,7 +10,7 @@ const { auth, isAdmin } = require('../middleware/auth');
 const router = express.Router();
 
 // ABOUT
-router.get('/about', [auth, isAdmin], async (req, res) => {
+router.get('/about', async (req, res) => {
   try {
     const about = await About.find({});
 
@@ -71,7 +71,7 @@ router.post('/about', [auth, isAdmin], async (req, res) => {
 });
 
 // LANGUAGES
-router.get('/languages', [auth, isAdmin], async (req, res) => {
+router.get('/languages', async (req, res) => {
   try {
     const languages = await Language.find({});
 
@@ -126,7 +126,7 @@ router.post('/languages', [auth, isAdmin], async (req, res) => {
 });
 
 // PORTFOLIO
-router.get('/portfolio', [auth, isAdmin], async (req, res) => {
+router.get('/portfolio', async (req, res) => {
   try {
     const portfolio = await Portfolio.find({});
 
@@ -181,7 +181,7 @@ router.post('/portfolio', [auth, isAdmin], async (req, res) => {
 });
 
 // SKILLS
-router.get('/skills', [auth, isAdmin], async (req, res) => {
+router.get('/skills', async (req, res) => {
   try {
     const skills = await Skill.find({});
 
