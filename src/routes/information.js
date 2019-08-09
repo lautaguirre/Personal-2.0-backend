@@ -195,6 +195,7 @@ router.patch('/portfolio/:_id', [auth, isAdmin], uploadPortfolio.array('images')
 
     return res.send(result);
   } catch(e) {
+    console.log(e);
     return res.status(500).send({ error: 'Error editing portfolio' });
   }
 });
