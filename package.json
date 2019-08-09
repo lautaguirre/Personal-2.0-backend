@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
+    "cloudinary": "^1.14.0",
     "cookie-parser": "~1.4.3",
+    "datauri": "^2.0.0",
     "debug": "~2.6.9",
     "express": "~4.16.0",
     "jsonwebtoken": "^8.5.1",

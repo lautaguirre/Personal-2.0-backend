@@ -5,8 +5,12 @@ const Portfolio = require('../models/portfolio');
 const Skill = require('../models/skill');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const Datauri = require('datauri');
+const path = require('path');
+const cloudinary = require('cloudinary');
 const { auth, isAdmin } = require('../middleware/auth');
 
+const dUri = new Datauri();
 const router = express.Router();
 
 // ABOUT
@@ -152,7 +156,20 @@ router.delete('/portfolio/:_id', [auth, isAdmin], async (req, res) => {
   }
 });
 
-router.patch('/portfolio/:_id', [auth, isAdmin], async (req, res) => {
+const uploadPortfolio = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100000,
+  },
+  fileFilter(req, file, cb) {
+    if (file.mimetype !== 'image/png') {
+      return cb(new Error('File must be a PNG file'));
+    }
+
+    cb(undefined, true);
+  },
+});
+router.patch('/portfolio/:_id', [auth, isAdmin], uploadPortfolio.array('images'), async (req, res) => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -160,7 +177,21 @@ router.patch('/portfolio/:_id', [auth, isAdmin], async (req, res) => {
   }
 
   try {
-    const result = await Portfolio.findByIdAndUpdate(_id, req.body, { runValidators: true });
+    let originalImages = [];
+    if (req.body.images) {
+      originalImages = Array.isArray(req.body.images) ? req.body.images : [ req.body.images ];
+    }
+
+    let imageLinks = [ ...originalImages ];
+    for (const file of req.files) {
+      const dataUri = dUri.format(path.extname(file.originalname).toString(), file.buffer);
+
+      const fileResponse = await cloudinary.v2.uploader.upload(dataUri.content, { folder: 'personalV2' });
+
+      imageLinks.push(fileResponse.url);
+    }
+
+    const result = await Portfolio.findByIdAndUpdate(_id, { ...req.body, images: imageLinks }, { runValidators: true, new: true });
 
     return res.send(result);
   } catch(e) {
@@ -168,8 +199,17 @@ router.patch('/portfolio/:_id', [auth, isAdmin], async (req, res) => {
   }
 });
 
-router.post('/portfolio', [auth, isAdmin], async (req, res) => {
-  const portfolio = new Portfolio(req.body);
+router.post('/portfolio', [auth, isAdmin], uploadPortfolio.array('images'), async (req, res) => {
+  let imageLinks = [];
+  for (const file of req.files) {
+    const dataUri = dUri.format(path.extname(file.originalname).toString(), file.buffer);
+
+    const fileResponse = await cloudinary.v2.uploader.upload(dataUri.content, { folder: 'personalV2' });
+
+    imageLinks.push(fileResponse.url);
+  }
+
+  const portfolio = new Portfolio({ ...req.body, images: imageLinks });
 
   try  {
     await portfolio.save();
@@ -208,6 +248,7 @@ router.delete('/skills/:_id', [auth, isAdmin], async (req, res) => {
 });
 
 const uploadSkill = multer({
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 10000,
   },
@@ -227,27 +268,36 @@ router.patch('/skills/:_id', [auth, isAdmin], uploadSkill.single('asset'), async
     return res.status(500).send({ error: 'Missing ID' });
   }
 
-  let formattedAsset;
-  if (type === 'image') {
-    if (req.file) {
-      formattedAsset = req.file.buffer.toString('base64');
-    } else if (asset) {
-      formattedAsset = asset.data;
-    } else {
-      return res.status(500).send({ error: 'Missing File' });
-    }
-  } else if (type === 'icon'){
-    formattedAsset = asset;
-  } else {
-    return res.status(500).send({ error: 'Incorrect image type' });
-  }
-
   try {
-    await Skill.updateOne({ 'content._id': _id }, { 'content.$': { ...req.body, asset: formattedAsset, _id }}, { runValidators: true });
+    let formattedAsset;
+    if (type === 'image') {
+      if (req.file) {
+        const dataUri = dUri.format(path.extname(req.file.originalname).toString(), req.file.buffer);
 
-    return res.send({ ...req.body, asset: formattedAsset, _id });
+        const fileResponse = await cloudinary.v2.uploader.upload(dataUri.content, { folder: 'personalV2' });
+
+        formattedAsset = fileResponse.url;
+      } else if (asset) {
+        formattedAsset = asset;
+      } else {
+        return res.status(500).send({ error: 'Missing File' });
+      }
+    } else if (type === 'icon'){
+      if (asset) {
+        formattedAsset = asset;
+      } else {
+        return res.status(500).send({ error: 'Missing Icon' });
+      }
+    } else {
+      return res.status(500).send({ error: 'Missing Asset' });
+    }
+
+    const result = await Skill.findOneAndUpdate({ 'content._id': _id }, { 'content.$': { ...req.body, asset: formattedAsset, _id }}, { runValidators: true, new: true });
+
+    const contentElement = result.content.find(skill => skill._id.toString() === _id);
+
+    return res.send(contentElement);
   } catch(e) {
-    console.log(e.message)
     return res.status(500).send({ error: 'Error editing skill' });
   }
 });
@@ -261,25 +311,35 @@ router.post('/skills', [auth, isAdmin], uploadSkill.single('asset'), async (req,
 
   const _id = new mongoose.Types.ObjectId();
 
-  let formattedAsset;
-  if (type === 'image') {
-    if (req.file) {
-      formattedAsset = req.file.buffer.toString('base64');
-    } else if (asset) {
-      formattedAsset = asset.data;
-    } else {
-      return res.status(500).send({ error: 'Missing File' });
-    }
-  } else if (type === 'icon'){
-    formattedAsset = asset;
-  } else {
-    return res.status(500).send({ error: 'Incorrect image type' });
-  }
-
   try  {
-    await Skill.updateOne({ _id: groupId }, { $push: { content: { ...req.body, asset: formattedAsset, _id } }}, { runValidators: true });
+    let formattedAsset;
+    if (type === 'image') {
+      if (req.file) {
+        const dataUri = dUri.format(path.extname(req.file.originalname).toString(), req.file.buffer);
 
-    return res.send({ _id, description, type, asset: formattedAsset });
+        const fileResponse = await cloudinary.v2.uploader.upload(dataUri.content, { folder: 'personalV2' });
+
+        formattedAsset = fileResponse.url;
+      } else if (asset) {
+        formattedAsset = asset;
+      } else {
+        return res.status(500).send({ error: 'Missing File' });
+      }
+    } else if (type === 'icon'){
+      if (asset) {
+        formattedAsset = asset;
+      } else {
+        return res.status(500).send({ error: 'Missing Icon' });
+      }
+    } else {
+      return res.status(500).send({ error: 'Missing Asset' });
+    }
+
+    const result = await Skill.findOneAndUpdate({ _id: groupId }, { $push: { content: { ...req.body, asset: formattedAsset, _id } }}, { runValidators: true, new: true });
+
+    const contentElement = result.content.find(skill => skill._id.toString() === _id.toString());
+
+    return res.send(contentElement);
   } catch(e) {
     return res.status(500).send({ error: 'Error creating skill' });
   }
