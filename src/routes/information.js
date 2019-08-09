@@ -159,7 +159,7 @@ router.delete('/portfolio/:_id', [auth, isAdmin], async (req, res) => {
 const uploadPortfolio = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 100000,
+    fileSize: 10000000,
   },
   fileFilter(req, file, cb) {
     if (file.mimetype !== 'image/png') {
@@ -195,7 +195,6 @@ router.patch('/portfolio/:_id', [auth, isAdmin], uploadPortfolio.array('images')
 
     return res.send(result);
   } catch(e) {
-    console.log(e);
     return res.status(500).send({ error: 'Error editing portfolio' });
   }
 });
@@ -251,7 +250,7 @@ router.delete('/skills/:_id', [auth, isAdmin], async (req, res) => {
 const uploadSkill = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10000,
+    fileSize: 10000000,
   },
   fileFilter(req, file, cb) {
     if (file.mimetype !== 'image/svg+xml') {
