@@ -188,7 +188,7 @@ router.patch('/portfolio/:_id', [auth, isAdmin], uploadPortfolio.array('images')
 
       const fileResponse = await cloudinary.v2.uploader.upload(dataUri.content, { folder: 'personalV2' });
 
-      imageLinks.push(fileResponse.url);
+      imageLinks.push(fileResponse.secure_url);
     }
 
     const result = await Portfolio.findByIdAndUpdate(_id, { ...req.body, images: imageLinks }, { runValidators: true, new: true });
@@ -206,7 +206,7 @@ router.post('/portfolio', [auth, isAdmin], uploadPortfolio.array('images'), asyn
 
     const fileResponse = await cloudinary.v2.uploader.upload(dataUri.content, { folder: 'personalV2' });
 
-    imageLinks.push(fileResponse.url);
+    imageLinks.push(fileResponse.secure_url);
   }
 
   const portfolio = new Portfolio({ ...req.body, images: imageLinks });
@@ -276,7 +276,7 @@ router.patch('/skills/:_id', [auth, isAdmin], uploadSkill.single('asset'), async
 
         const fileResponse = await cloudinary.v2.uploader.upload(dataUri.content, { folder: 'personalV2' });
 
-        formattedAsset = fileResponse.url;
+        formattedAsset = fileResponse.secure_url;
       } else if (asset) {
         formattedAsset = asset;
       } else {
@@ -319,7 +319,7 @@ router.post('/skills', [auth, isAdmin], uploadSkill.single('asset'), async (req,
 
         const fileResponse = await cloudinary.v2.uploader.upload(dataUri.content, { folder: 'personalV2' });
 
-        formattedAsset = fileResponse.url;
+        formattedAsset = fileResponse.secure_url;
       } else if (asset) {
         formattedAsset = asset;
       } else {
