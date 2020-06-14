@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
+    "chalk": "^4.1.0",
     "cloudinary": "^1.14.0",
     "cookie-parser": "~1.4.3",
     "datauri": "^2.0.0",
