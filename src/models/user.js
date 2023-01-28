@@ -1,54 +1,57 @@
-const mongoose = require('mongoose');
-const validator = require('validator');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const mongoose = require("mongoose");
+const validator = require("validator");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true,
-    maxlength: 128,
-    minlength: 8,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    maxlength: 128,
-    minlength: 6,
-    lowercase: true,
-    validate(value) {
-      if (!validator.isEmail(value)) throw new Error('Invalid Email');
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      maxlength: 128,
+      minlength: 8,
     },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      maxlength: 128,
+      minlength: 6,
+      lowercase: true,
+      validate(value) {
+        if (!validator.isEmail(value)) throw new Error("Invalid Email");
+      },
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      maxlength: 64,
+      trim: true,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
   },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6,
-    maxlength: 64,
-    trim: true,
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user',
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
-      }
-    }
-  ],
-}, {
-  timestamps: true,
-});
+  {
+    timestamps: true,
+  }
+);
 
-userSchema.methods.generateAuthToken = async function() {
+userSchema.methods.generateAuthToken = async function () {
   const user = this;
 
   const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
@@ -60,7 +63,7 @@ userSchema.methods.generateAuthToken = async function() {
   return token;
 };
 
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const user = this;
 
   const userObject = user.toObject();
@@ -75,28 +78,28 @@ userSchema.statics.findUserByCredentials = async (email, password) => {
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new Error('Unable to login');
+    throw new Error("Unable to login");
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
-    throw new Error('Unable to login');
+    throw new Error("Unable to login");
   }
 
   return user;
 };
 
-userSchema.pre('save', async function(next) {
+userSchema.pre("save", async function (next) {
   const user = this;
 
-  if (user.isModified('password')) {
+  if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);
   }
 
   next();
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;
